@@ -1,36 +1,61 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Speed Reader
+
+A modern speed reading trainer built with Next.js. Displays text one word at a time with optimal recognition point (ORP) highlighting, helping you read faster while maintaining comprehension.
+
+## Features
+
+- **Progressive WPM Ramping** - Start slow and gradually increase speed over a configurable duration
+- **ORP Highlighting** - Center letter highlighted in red for optimal focus
+- **Smart Slowdowns** - Configurable pauses for long words and punctuation
+- **Session Resume** - Pause anytime and resume from where you left off
+- **Keyboard Controls** - Space to pause/resume, Escape to exit
+- **Clean UI** - Distraction-free reading with auto-hiding controls
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Configuration
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Setting | Description | Range |
+|---------|-------------|-------|
+| Start Speed | Initial WPM | 30-1000 |
+| End Speed | Target WPM after ramp | 30-1500 |
+| Ramp Duration | Seconds to reach target speed | 0-60 |
+| Long Word Slowdown | Extra time for words >5 chars | 0-100% |
+| Punctuation Pause | Extra time at sentence ends | 0-100% |
 
-## Learn More
+## Project Structure
 
-To learn more about Next.js, take a look at the following resources:
+```
+app/
+├── page.tsx           # Main input screen
+├── ReadingScreen.tsx  # Reading interface
+├── layout.tsx         # Root layout with metadata
+├── types.ts           # TypeScript interfaces & constants
+├── components/
+│   └── SettingItem.tsx
+├── hooks/
+│   ├── useReadingTimer.ts
+│   └── useAutoHideUI.ts
+└── utils/
+    ├── text.ts        # Word parsing & display
+    └── timing.ts      # WPM & delay calculations
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Tech Stack
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Next.js 16
+- React 19
+- Framer Motion
+- Tailwind CSS 4
+- TypeScript
 
-## Deploy on Vercel
+## License
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT
