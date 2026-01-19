@@ -5,6 +5,7 @@ export interface ReadingConfig {
     longWordSlowdown: number;
     punctuationSlowdown: number;
     scaleLongWords: boolean;
+    blinkReminder: boolean;
     initialIndex: number;
 }
 
@@ -15,6 +16,7 @@ export const DEFAULT_CONFIG: Omit<ReadingConfig, 'initialIndex'> = {
     longWordSlowdown: 0.5,
     punctuationSlowdown: 0.1,
     scaleLongWords: true,
+    blinkReminder: false,
 };
 
 export const CONFIG_LIMITS = {
@@ -30,6 +32,7 @@ export const UI_CONSTANTS = {
     CONTEXT_WORDS_BEFORE: 6,
     CONTEXT_WORDS_AFTER: 6,
     LONG_WORD_THRESHOLD: 5,
+    BLINK_INTERVAL: 10000, // 10 seconds
 } as const;
 
 export const PARAGRAPH_MARKER = '\u0000';

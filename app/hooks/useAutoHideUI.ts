@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { UI_CONSTANTS } from '../types';
 
-export function useAutoHideUI(isPaused: boolean) {
+export function useAutoHideUI(isPaused: boolean, isComplete: boolean = false) {
     const [showUI, setShowUI] = useState(true);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -23,5 +23,5 @@ export function useAutoHideUI(isPaused: boolean) {
         };
     }, []);
 
-    return showUI || isPaused;
+    return showUI || isPaused || isComplete;
 }

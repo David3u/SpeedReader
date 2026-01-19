@@ -22,6 +22,7 @@ export default function Home() {
   const [longWordSlowdown, setLongWordSlowdown] = useState(DEFAULT_CONFIG.longWordSlowdown);
   const [punctuationSlowdown, setPunctuationSlowdown] = useState(DEFAULT_CONFIG.punctuationSlowdown);
   const [scaleLongWords, setScaleLongWords] = useState(DEFAULT_CONFIG.scaleLongWords);
+  const [blinkReminder, setBlinkReminder] = useState(DEFAULT_CONFIG.blinkReminder);
 
   const words = parseTextToWords(text);
 
@@ -44,6 +45,7 @@ export default function Home() {
     longWordSlowdown,
     punctuationSlowdown,
     scaleLongWords,
+    blinkReminder,
     initialIndex: lastReadIndex,
   };
 
@@ -162,6 +164,11 @@ export default function Home() {
                           checked={scaleLongWords}
                           onChange={setScaleLongWords}
                         />
+                        <SettingToggle
+                          label="Blink reminder"
+                          checked={blinkReminder}
+                          onChange={setBlinkReminder}
+                        />
                       </div>
                     </motion.div>
                   )}
@@ -220,6 +227,11 @@ export default function Home() {
                         label="Scale long words"
                         checked={scaleLongWords}
                         onChange={setScaleLongWords}
+                      />
+                      <SettingToggle
+                        label="Blink reminder"
+                        checked={blinkReminder}
+                        onChange={setBlinkReminder}
                       />
                     </div>
                   </motion.div>

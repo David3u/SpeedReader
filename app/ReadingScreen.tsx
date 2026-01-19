@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Play, Pause, RotateCcw, ArrowLeft } from "lucide-react";
+import { Play, Pause, RotateCcw, ArrowLeft, Eye } from "lucide-react";
 import { ReadingConfig, UI_CONSTANTS } from "./types";
 import { cleanWord, splitWordForDisplay, calculateWordDelay, calculateCurrentWpm, calculateProgress } from "./utils";
 import { useAutoHideUI } from "./hooks";
@@ -17,22 +17,28 @@ export default function ReadingScreen({ words, config, onBack }: ReadingScreenPr
     const [index, setIndex] = useState(config.initialIndex);
     const [wpm, setWpm] = useState(config.startWpm);
     const [isPaused, setIsPaused] = useState(false);
-    const showUI = useAutoHideUI(isPaused);
+    const [isBlinkPause, setIsBlinkPause] = useState(false);
+
+    const isComplete = words.length > 0 && index === words.length - 1;
+    const showUI = useAutoHideUI(isPaused || isBlinkPause, isComplete);
 
     const timerRef = useRef<NodeJS.Timeout | null>(null);
     const startTimeRef = useRef<number>(Date.now());
     const elapsedOffsetRef = useRef<number>(0);
     const indexRef = useRef(config.initialIndex);
     const isPausedRef = useRef(false);
+    const blinkTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const lastBlinkTimeRef = useRef<number>(Date.now());
 
     useEffect(() => {
-        isPausedRef.current = isPaused;
-        if (!isPaused) {
+        isPausedRef.current = isPaused || isBlinkPause;
+        if (!isPaused && !isBlinkPause) {
             startTimeRef.current = Date.now();
+            lastBlinkTimeRef.current = Date.now();
         } else {
             elapsedOffsetRef.current += (Date.now() - startTimeRef.current) / 1000;
         }
-    }, [isPaused]);
+    }, [isPaused, isBlinkPause]);
 
     const tick = useCallback(() => {
         if (isPausedRef.current) return;
@@ -50,14 +56,41 @@ export default function ReadingScreen({ words, config, onBack }: ReadingScreenPr
     }, [config, words]);
 
     useEffect(() => {
-        if (!isPaused && index < words.length - 1) {
+        if (!isPaused && !isBlinkPause && index < words.length - 1) {
             const delay = calculateWordDelay(words[index], wpm, config);
             timerRef.current = setTimeout(tick, delay);
         }
         return () => {
             if (timerRef.current) clearTimeout(timerRef.current);
         };
-    }, [isPaused, tick, wpm, index, words, config]);
+    }, [isPaused, isBlinkPause, tick, wpm, index, words, config]);
+
+    // Blink reminder timer
+    useEffect(() => {
+        if (!config.blinkReminder || isPaused || isBlinkPause || isComplete) {
+            if (blinkTimerRef.current) clearTimeout(blinkTimerRef.current);
+            return;
+        }
+
+        const scheduleBlinkCheck = () => {
+            const elapsed = Date.now() - lastBlinkTimeRef.current;
+            const remaining = UI_CONSTANTS.BLINK_INTERVAL - elapsed;
+
+            if (remaining <= 0) {
+                setIsBlinkPause(true);
+            } else {
+                blinkTimerRef.current = setTimeout(() => {
+                    setIsBlinkPause(true);
+                }, remaining);
+            }
+        };
+
+        scheduleBlinkCheck();
+
+        return () => {
+            if (blinkTimerRef.current) clearTimeout(blinkTimerRef.current);
+        };
+    }, [config.blinkReminder, isPaused, isBlinkPause, isComplete]);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -73,9 +106,9 @@ export default function ReadingScreen({ words, config, onBack }: ReadingScreenPr
         return () => window.removeEventListener("keydown", handleKeyDown);
     }, [onBack]);
 
+    const isEffectivelyPaused = isPaused || isBlinkPause;
     const { left, center, right } = splitWordForDisplay(words[index] || "");
     const progress = calculateProgress(index, words.length);
-    const isComplete = words.length > 0 && index === words.length - 1;
 
     // Scale down font for words over 9 characters (if enabled)
     const currentWord = words[index] || "";
@@ -155,7 +188,7 @@ export default function ReadingScreen({ words, config, onBack }: ReadingScreenPr
                 </div>
 
                 <div
-                    className={`flex items-center text-6xl md:text-9xl font-semibold tracking-[-0.02em] h-48 relative w-full transition-opacity duration-500 ${isPaused ? "opacity-30 blur-sm" : "opacity-100"}`}
+                    className={`flex items-center text-6xl md:text-9xl font-semibold tracking-[-0.02em] h-48 relative w-full transition-opacity duration-500 ${isEffectivelyPaused ? "opacity-30 blur-sm" : "opacity-100"}`}
                     style={{ transform: `scale(${fontScale})` }}
                 >
                     <div className="absolute inset-0 flex items-center justify-center">
@@ -173,7 +206,7 @@ export default function ReadingScreen({ words, config, onBack }: ReadingScreenPr
                 </div>
 
                 <AnimatePresence>
-                    {isPaused && (
+                    {isPaused && !isBlinkPause && (
                         <motion.div
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
@@ -183,6 +216,37 @@ export default function ReadingScreen({ words, config, onBack }: ReadingScreenPr
                             <div className="px-6 py-2 bg-white/10 backdrop-blur-md rounded-full border border-white/20 text-white font-bold tracking-widest uppercase text-xs">
                                 Session Paused
                             </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                <AnimatePresence>
+                    {isBlinkPause && (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.9 }}
+                            className="absolute inset-0 flex flex-col items-center justify-center gap-4"
+                        >
+                            <motion.div
+                                animate={{ scale: [1, 1.1, 1] }}
+                                transition={{ duration: 1.5, repeat: Infinity }}
+                                className="text-6xl"
+                            >
+                                <Eye className="w-16 h-16 text-cyan-400" />
+                            </motion.div>
+                            <div className="px-6 py-2 bg-cyan-500/20 backdrop-blur-md rounded-full border border-cyan-500/40 text-cyan-300 font-bold tracking-widest uppercase text-sm">
+                                Blink!
+                            </div>
+                            <button
+                                onClick={() => {
+                                    lastBlinkTimeRef.current = Date.now();
+                                    setIsBlinkPause(false);
+                                }}
+                                className="mt-2 px-8 py-3 bg-cyan-500 text-black font-bold rounded-full hover:bg-cyan-400 transition-all"
+                            >
+                                Continue
+                            </button>
                         </motion.div>
                     )}
                 </AnimatePresence>
