@@ -23,12 +23,18 @@ export default function ReadingScreen({ words, config, onBack }: ReadingScreenPr
     const showUI = useAutoHideUI(isPaused || isBlinkPause, isComplete);
 
     const timerRef = useRef<NodeJS.Timeout | null>(null);
-    const startTimeRef = useRef<number>(Date.now());
+    const startTimeRef = useRef<number>(0);
     const elapsedOffsetRef = useRef<number>(0);
     const indexRef = useRef(config.initialIndex);
     const isPausedRef = useRef(false);
     const blinkTimerRef = useRef<NodeJS.Timeout | null>(null);
-    const lastBlinkTimeRef = useRef<number>(Date.now());
+    const lastBlinkTimeRef = useRef<number>(0);
+
+    useEffect(() => {
+        const now = Date.now();
+        startTimeRef.current = now;
+        lastBlinkTimeRef.current = now;
+    }, []);
 
     useEffect(() => {
         isPausedRef.current = isPaused || isBlinkPause;
@@ -40,7 +46,7 @@ export default function ReadingScreen({ words, config, onBack }: ReadingScreenPr
         }
     }, [isPaused, isBlinkPause]);
 
-    const tick = useCallback(() => {
+    const tick = useCallback(function tickCallback() {
         if (isPausedRef.current) return;
 
         const totalElapsed = elapsedOffsetRef.current + (Date.now() - startTimeRef.current) / 1000;
@@ -51,7 +57,7 @@ export default function ReadingScreen({ words, config, onBack }: ReadingScreenPr
             indexRef.current += 1;
             setIndex(indexRef.current);
             const delay = calculateWordDelay(words[indexRef.current], currentWpm, config);
-            timerRef.current = setTimeout(tick, delay);
+            timerRef.current = setTimeout(tickCallback, delay);
         }
     }, [config, words]);
 

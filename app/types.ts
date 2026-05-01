@@ -9,7 +9,27 @@ export interface ReadingConfig {
     initialIndex: number;
 }
 
-export const DEFAULT_CONFIG: Omit<ReadingConfig, 'initialIndex'> = {
+export type PersistedSettings = Omit<ReadingConfig, 'initialIndex'>;
+
+export interface TextHistoryEntry {
+    id: string;
+    text: string;
+    title: string;
+    preview: string;
+    wordCount: number;
+    updatedAt: string;
+    lastReadIndex: number;
+}
+
+export interface PersistedReaderState {
+    settings: PersistedSettings;
+    currentText: string;
+    currentHistoryId: string | null;
+    lastReadIndex: number;
+    history: TextHistoryEntry[];
+}
+
+export const DEFAULT_CONFIG: PersistedSettings = {
     startWpm: 60,
     endWpm: 300,
     rampDuration: 10,
@@ -33,6 +53,7 @@ export const UI_CONSTANTS = {
     CONTEXT_WORDS_AFTER: 6,
     LONG_WORD_THRESHOLD: 5,
     BLINK_INTERVAL: 10000, // 10 seconds
+    HISTORY_LIMIT: 8,
 } as const;
 
 export const PARAGRAPH_MARKER = '\u0000';

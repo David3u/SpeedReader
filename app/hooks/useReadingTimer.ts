@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { ReadingConfig } from '../types';
 import { calculateWordDelay, calculateCurrentWpm } from '../utils';
 
@@ -20,10 +20,14 @@ export function useReadingTimer({
     onWpmChange,
 }: UseReadingTimerProps) {
     const timerRef = useRef<NodeJS.Timeout | null>(null);
-    const startTimeRef = useRef<number>(Date.now());
+    const startTimeRef = useRef<number>(0);
     const elapsedOffsetRef = useRef<number>(0);
     const indexRef = useRef(config.initialIndex);
     const isPausedRef = useRef(isPaused);
+
+    useEffect(() => {
+        startTimeRef.current = Date.now();
+    }, []);
 
     useEffect(() => {
         isPausedRef.current = isPaused;
@@ -35,7 +39,7 @@ export function useReadingTimer({
         }
     }, [isPaused]);
 
-    const tick = useCallback(() => {
+    const tick = useCallback(function tickCallback() {
         if (isPausedRef.current) return;
 
         const sessionActiveTime = (Date.now() - startTimeRef.current) / 1000;
@@ -48,7 +52,7 @@ export function useReadingTimer({
             indexRef.current += 1;
             onIndexChange(indexRef.current);
             const delay = calculateWordDelay(words[indexRef.current], currentWpm, config);
-            timerRef.current = setTimeout(tick, delay);
+            timerRef.current = setTimeout(tickCallback, delay);
         }
     }, [config, words, onIndexChange, onWpmChange]);
 
